@@ -14,10 +14,7 @@ return polynomial coefficients c = [n4, n3, n2, n1, n0]
 			[4, 3, 2, 1, 0],\
 			[0, 0, 0, 1, 0],\
 			[0, 0, 0, 0, 1]], dtype = np.float)
-	#print('A = ', A)
-	#print('b = ', b)
 	x = gauss(A, b)
-	print('x = ', x)
 	return x
 
 def trajectoryInterpolation(p1, p2, p3, dp0, dp1):
@@ -37,6 +34,25 @@ def pointOnTrajectory(A, t):
 	point = np.dot(A, T)
 	return point
 
+def tcpTrajectoryInterp(tcp, dTcp1, dTcp2):
+	tcp1 = tcp
+	tcp2 = tcp + dTcp1
+	tcp3 = tcp + dTcp2
+	A = [np.matrix(np.zeros((5,3))), np.matrix(np.zeros((5,3))), np.matrix(np.zeros((5,3))), np.matrix(np.zeros((5.3)))]
+	for i in range(0, 4):
+		p1 = tcp1[i, 0:3]
+		p2 = tcp2[i, 0:3]
+		p3 = tcp3[i, 0:3]
+		dp0 = p3 - p1
+		dp1 = p3 - p1
+		A[i] = trajectoryInterpolation(p1, p2, p3, dp0, dp1)
+	return A
+
+def tcpOnTrajectory(A,t):
+	tcp = np.ones((4,4))
+	for i in range(0, 4):
+		tcp[i, 0:3] = pointOnTrajectory(A[i], t)
+	return tcp
 #example
 #p1 = np.array([0, 0, 0], dtype = np.float)
 #p2 = np.array([0, 1, 1], dtype = np.float)
@@ -44,7 +60,7 @@ def pointOnTrajectory(A, t):
 #dp0 = np.array([0, 1, 0], dtype = np.float)
 #dp1 = np.array([0, 1, 0], dtype = np.float)
 #
-#A = trajectoryInterpolation(p1, p2, p3, dp0, dp1)
+#A = trajectoryIp1nterpolation(p1, p2, p3, dp0, dp1)
 #print('A = ', A)
-#t = 0.5
+#t = 0.5	
 #print('point is: ', pointOnTrajectory(A, t))	

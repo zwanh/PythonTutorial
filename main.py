@@ -15,16 +15,19 @@ initLegPose = np.array([[0, -45, 90],\
 			[0, -45, 90],\
 			[0, -45, 90]])
 dog.setLegPose(initLegPose)
-dogShow(dog)
+#dogShow(dog)
+tcp = dog.getLegTcp()
+print('tcp', tcp)
+dTcp1 = np.array([[0, 10, 20, 0],\
+		  [0, 10, 20, 0],\
+		  [0, 10, 20, 0],\
+		  [0, 10, 20, 0]])
 
-
-
-
-
-
-
-
-
-
-
-
+dTcp2 = np.array([[0, 20, 0, 0],\
+		  [0, 20, 0, 0],\
+		  [0, 20, 0, 0],\
+		  [0, 20, 0, 0]])
+A = tcpTrajectoryInterp(tcp, dTcp1, dTcp2)
+t = 1 
+newTcp = tcpOnTrajectory(A,t)
+print('newTcp', newTcp)

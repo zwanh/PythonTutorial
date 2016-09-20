@@ -138,8 +138,6 @@ def dogShow(dog):
 	'''Draw dog platform'''
 	mpl.rcParams['legend.fontsize'] = 10
 	fix = dog.getFixPoints()
-	print fix
-	print fix[:,0]
 	knee = dog.getLegKnee()
 	tcp = dog.getLegTcp()
 	fig = plt.figure()
