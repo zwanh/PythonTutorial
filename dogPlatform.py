@@ -27,7 +27,7 @@ class dogPlatform:
 					[0, 0, -100],\
 					[0, 0, -100],\
 					[0, 0, -100]])
-		
+		dogPlatform.forwardKinematics(self)
 	def inverseKinematics(self):
 		'''Calculate leg joints from Tcp'''
 		for i in range(0,4):
@@ -48,7 +48,6 @@ class dogPlatform:
 			self.legPose[i][0] = joint_0
 			self.legPose[i][1] = joint_1
 			self.legPose[i][2] = joint_2
-
 
 	def forwardKinematics(self):
 		'''Calculate leg Tcp from joints'''
@@ -89,12 +88,12 @@ class dogPlatform:
 	def setLegTcp(self, legTcp):
 		'''Set dog's four legs' Tcp position'''
 		self.legTcp = legTcp
-	#	inverseKinematics()			#update dog's four legs' joints
+		dogPlatform.inverseKinematics(self)			#update dog's four legs' joints
 	
 	def setLegPose(self, legPose):
 		'''Set dog's four legs' joints pose'''
 		self.legPose = legPose
-	#	forwardKinematics()
+		dogPlatform.forwardKinematics(self)
 
 	def getLegPose(self):
 		'''Get dog's four legs' joints pose'''
@@ -151,19 +150,19 @@ def dogShow(dog):
 		z = np.array([fix[i][2], knee[i][2], tcp[i][2]])
 		ax.plot(x, y, z, c = 'r')
 	ax.plot(fix[:, 0], fix[:, 1], fix[:, 2])
-	plt.axis('equal')
+	ax.axis('equal')
+	plt.title('Four legs robot simulation')
 	plt.show()
 
 #example
-d = dogPlatform()
-tcp = np.array([[-150, 200, -130, 1],\
-		[250, 250, -130, 1],\
-		[-250, -250, -130, 1],\
-		[150, -200, -130, 1]])
-d.setLegTcp(tcp)
-d.inverseKinematics()
-print d.getLegPose()
-
-d.forwardKinematics()
-print d.getLegTcp()
-dogShow(d)
+#d = dogPlatform()
+#tcp = np.array([[-150, 200, -130, 1],\
+#		[250, 250, -130, 1],\
+#		[-250, -250, -130, 1],\
+#		[150, -200, -130, 1]])
+#d.setLegTcp(tcp)
+#print d.getLegPose()
+#
+#d.forwardKinematics()
+#print d.getLegTcp()
+#dogShow(d)

@@ -1,5 +1,5 @@
 import numpy as np
-import gauss
+from gauss import *
 
 def polynomialInterpolation(x1, x2, x3, dx0, dx1):
 	'''Given three one dimension points and the curve's derivative vectors of start and end points,
@@ -16,7 +16,7 @@ return polynomial coefficients c = [n4, n3, n2, n1, n0]
 			[0, 0, 0, 0, 1]], dtype = np.float)
 	#print('A = ', A)
 	#print('b = ', b)
-	x = gauss.gauss(A, b)
+	x = gauss(A, b)
 	print('x = ', x)
 	return x
 
@@ -41,8 +41,8 @@ def pointOnTrajectory(A, t):
 #p1 = np.array([0, 0, 0], dtype = np.float)
 #p2 = np.array([0, 1, 1], dtype = np.float)
 #p3 = np.array([0, 2, 0], dtype = np.float)
-#pd0 = np.array([0, 1, 0], dtype = np.float)
-#pd1 = np.array([0, 1, 0], dtype = np.float)
+#dp0 = np.array([0, 1, 0], dtype = np.float)
+#dp1 = np.array([0, 1, 0], dtype = np.float)
 #
 #A = trajectoryInterpolation(p1, p2, p3, dp0, dp1)
 #print('A = ', A)
