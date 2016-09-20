@@ -11,10 +11,10 @@ class dogPlatform:
 		#dimensiton parameters
 		self.width = 200
 		self.height = 300
-		self.legFix = np.array([[-self.width / 2., self.height / 2., 0],\
-					[self.width / 2., self.height / 2., 0],\
-					[-self.width / 2., -self.height / 2., 0],\
-					[self.width / 2., -self.height / 2., 0]])
+		self.legFix = np.array([[-self.width / 2., self.height / 2., 0, 1],\
+					[self.width / 2., self.height / 2., 0, 1],\
+					[-self.width / 2., -self.height / 2., 0, 1],\
+					[self.width / 2., -self.height / 2., 0, 1]])
 		self.legUpper = np.array([[0, 0, -100],\
 					  [0, 0, -100],\
 					  [0, 0, -100],\
@@ -27,7 +27,18 @@ class dogPlatform:
 	def inverseKinematics(self):
 		'''Calculate leg joints from Tcp'''
 #		self.legPose = 2 * selflegTcp
-
+		for i in range(0,4):
+			dis = self.legFix[i] - self.legTcp[i]
+			print dis
+			self.legPose[i][0] = np.arctan(dis[0] / dis[2]) * 180 / np.pi
+			dx = np.sqrt(dis[0]**2 + dis[2]**2)
+			theta = np.arctan(-dis[1] / dx) * 180 / np.pi		#angle of line(fix-tcp) and xoz plane
+			l1 = np.linalg.norm(self.legUpper[i])
+			l2 = np.linalg.norm(self.legLow[i])
+			l3 = np.linalg.norm(self.legFix[i] - self.legTcp[i])	#triangle of leg
+			self.legPose[i][1] = np.arccos((l1**2 - l2**2 + l3**2) / (2 * l1 * l3)) * 180 / np.pi
+			self.legPose[i][1] = theta - self.legPose[i][1]
+			self.legPose[i][2] = np.arccos((l3**2 - l1**2 - l2**2) / (2 * l1 * l2)) * 180 / np.pi
 	def forwardKinematics(self):
 		'''Calculate leg Tcp from joints'''
                 for i in range(0,4):
@@ -66,13 +77,13 @@ class dogPlatform:
 
 	def setLegTcp(self, legTcp):
 		'''Set dog's four legs' Tcp position'''
-		selft.legTcp = legTcp
-		inverseKinematics()			#update dog's four legs' joints
+		self.legTcp = legTcp
+	#	inverseKinematics()			#update dog's four legs' joints
 
 	def setLegPose(self, legPose):
 		'''Set dog's four legs' joints pose'''
 		self.legPose = legPose
-		forwardKinematics()
+	#	forwardKinematics()
 
 	def getLegPose(self):
 		'''Get dog's four legs' joints pose'''
@@ -85,6 +96,13 @@ class dogPlatform:
 
 #example
 d = dogPlatform()
-d.forwardKinematics()
+tcp = np.array([[-150, 150, -100, 1],\
+		[100, 150, -200, 1],\
+		[-100, -150, -150, 1],\
+		[100, -150, -200, 1]])
+d.setLegTcp(tcp)
+d.inverseKinematics()
 print d.getLegPose()
+
+d.forwardKinematics()
 print d.getLegTcp()
