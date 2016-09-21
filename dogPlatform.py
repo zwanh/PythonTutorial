@@ -141,14 +141,14 @@ def dogShow(dog):
 	knee = dog.getLegKnee()
 	tcp = dog.getLegTcp()
 	fig = plt.figure()
-	ax = fig.gca(projection = '3d')
+	ax = fig.gca(projection = '3d',xlim = [-300, 300], ylim = [-300,300], zlim = [-300, 300])
 	for i in range(0,4):
 		x = np.array([fix[i][0], knee[i][0], tcp[i][0]])
 		y = np.array([fix[i][1], knee[i][1], tcp[i][1]])
 		z = np.array([fix[i][2], knee[i][2], tcp[i][2]])
 		ax.plot(x, y, z, c = 'r')
 	ax.plot(fix[:, 0], fix[:, 1], fix[:, 2])
-	ax.axis('equal')
+	ax.set_aspect('equal')
 	plt.title('Four legs robot simulation')
 	plt.show()
 
