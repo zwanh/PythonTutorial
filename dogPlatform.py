@@ -12,8 +12,8 @@ class dogPlatform:
 		self.legTcp = np.zeros((4,4))		#record four legPose(x,y,z,1)
 		self.legPose = np.zeros((4,3))		#record four legs' joins
 		#dimensiton parameters
-		self.width = 300
-		self.height = 400
+		self.width = 200
+		self.height = 300
 		#leg order: front_left, front_right, rear_left, rear_right
 		self.legFix = np.array([[-self.width / 2., self.height / 2., 0, 1],\
 					[self.width / 2., self.height / 2., 0, 1],\
