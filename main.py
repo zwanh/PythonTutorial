@@ -4,7 +4,7 @@ import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 from trajectoryInterpolation import *		#import all class and functions
 from dogPlatform import *
-frameNum = 50
+frameNum = 20
 
 def genDogLegTcps(dog):
 	'''generate a series of dog legTcps'''
@@ -17,9 +17,23 @@ def genDogLegTcps(dog):
 			  [0, -60, 0, 0],\
 			  [0, -60, 0, 0],\
 			  [0, 60, 0, 0]])
-	A = tcpTrajectoryInterp(tcp, dTcp1, dTcp2)
-	Tcps = [tcpOnTrajectory(A, np.float(t)/frameNum) for t in range(1, frameNum+1)]
+	A1 = tcpTrajectoryInterp(tcp, dTcp1, dTcp2)
+	
+	tcp = tcp + dTcp2
+	dTcp1 = np.array([[0, -30, 0, 0],\
+			  [0, 30, 50, 0],\
+			  [0, 30, 50, 0],\
+			  [0, -30, 0, 0]])
+	dTcp2 = np.array([[0, -60, 0, 0],\
+			  [0, 60, 0, 0],\
+			  [0, 60, 0, 0],\
+			  [0, -60, 0, 0]])
+	A2 = tcpTrajectoryInterp(tcp, dTcp1, dTcp2)
+	Tcps1 = [tcpOnTrajectory(A1, np.float(t)/frameNum) for t in range(1, frameNum+1)]
+	Tcps2 = [tcpOnTrajectory(A2, np.float(t)/frameNum) for t in range(1, frameNum+1)]
+	Tcps = Tcps1 + Tcps2
 	return Tcps
+
 def update_fig(num, Tcps, lines, dog):
 	print 'num', num
 	tcp = Tcps[num]
@@ -28,6 +42,7 @@ def update_fig(num, Tcps, lines, dog):
 		line.set_data(dat[0:2])
 		line.set_3d_properties(dat[2])
 	return lines
+
 def plotData(tcp, dog):
 	dog.setLegTcp(tcp)
 	fix0 = dog.getFixPoints()
@@ -46,26 +61,32 @@ fig = plt.figure()
 ax = p3.Axes3D(fig)
 
 dog = dogPlatform()
-initLegPose = np.array([[0, -45, 90],\
-			[0, -45, 90],\
-			[0, -45, 90],\
-			[0, -45, 90]])
+initLegPose = np.array([[0, -25, 50],\
+			[0, -25, 50],\
+			[0, -25, 50],\
+			[0, -25, 50]])
 dog.setLegPose(initLegPose)
+tcp = dog.getLegTcp()
+dTcp1 = np.array([[0, -30, 0, 0],\
+		  [0, 30, 0, 0],\
+		  [0, 30, 0, 0],\
+		  [0, -30, 0, 0]])
+dog.setLegTcp(tcp + dTcp1)
 #dogShow(dog)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
 lines = [ax.plot(dat[0,0:], dat[1,0:], dat[2,0:])[0] for dat in data]
 
-#ax.set_xlim3d([-300,300])
-#ax.set_ylim3d([-300,300])
-#ax.set_zlim3d([-200,0])
+ax.set_xlim3d([-200,200])
+ax.set_ylim3d([-200,200])
+ax.set_zlim3d([-200,200])
 ax.set_title('dog simulation')
-ax.axis('equal')
+#ax.axis('equal')
 
 Tcps = genDogLegTcps(dog)
-dogAni = animation.FuncAnimation(fig, update_fig,frameNum, repeat = True,
-			 fargs = (Tcps, lines, dog), interval = 20)
+dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True,
+			 fargs = (Tcps, lines, dog), interval = 50)
 #update_fig(frameNum, Tcps, lines, dog)
 plt.show()
 
