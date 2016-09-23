@@ -61,10 +61,10 @@ fig = plt.figure()
 ax = p3.Axes3D(fig)
 
 dog = dogPlatform()
-initLegPose = np.array([[0, -25, 50],\
-			[0, -25, 50],\
-			[0, -25, 50],\
-			[0, -25, 50]])
+initLegPose = np.array([[0, -15, 30],\
+			[0, -15, 30],\
+			[0, -15, 30],\
+			[0, -15, 30]])
 dog.setLegPose(initLegPose)
 tcp = dog.getLegTcp()
 dTcp1 = np.array([[0, -30, 0, 0],\
@@ -87,7 +87,6 @@ ax.set_title('dog simulation')
 Tcps = genDogLegTcps(dog)
 dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True,
 			 fargs = (Tcps, lines, dog), interval = 50)
-#update_fig(frameNum, Tcps, lines, dog)
 plt.show()
 
 
