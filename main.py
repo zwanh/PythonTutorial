@@ -8,7 +8,7 @@ import threading
 
 frameNum = 20
 stepTime = 50		#units:ms
-enableAni = False	#enable animation or not	
+enableAni = True	#enable animation or not	
 
 def genDogLegTcps(dog):
 	'''generate a series of dog legTcps'''
@@ -38,7 +38,7 @@ def genDogLegTcps(dog):
 	Tcps = Tcps1 + Tcps2
 	return Tcps
 
-def update_fig(num, Tcps, lines, dog):
+def update_fig(num, Tcps, dog, lines = None):
 	print 'num', num
 	if enableAni :
 		tcp = Tcps[num]
@@ -50,7 +50,7 @@ def update_fig(num, Tcps, lines, dog):
 	else:
 		tcp = Tcps[num]
 		dog.setLegTcp(tcp)
-		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, lines, dog])
+		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dog])
 		t.start()
 
 def plotData(tcp, dog):
@@ -67,8 +67,6 @@ def plotData(tcp, dog):
 	data = [leg[0], leg[1], leg[2], leg[3], fix]
 	return data
 
-fig = plt.figure()
-ax = p3.Axes3D(fig)
 
 dog = dogPlatform()
 initLegPose = np.array([[0, -15, 30],\
@@ -82,23 +80,23 @@ dTcp1 = np.array([[0, -30, 0, 0],\
 		  [0, 30, 0, 0],\
 		  [0, -30, 0, 0]])
 dog.setLegTcp(tcp + dTcp1)
-#dogShow(dog)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
-lines = [ax.plot(dat[0,0:], dat[1,0:], dat[2,0:])[0] for dat in data]
-
-ax.set_xlim3d([-200,200])
-ax.set_ylim3d([-200,200])
-ax.set_zlim3d([-200,200])
-ax.set_title('dog simulation')
-#ax.axis('equal')
 
 Tcps = genDogLegTcps(dog)
 #show figure and animation, need a screen
 if (enableAni) :
-	dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True, fargs = (Tcps, lines, dog), interval = stepTime)
+	fig = plt.figure()
+	ax = p3.Axes3D(fig)
+	ax.set_xlim3d([-200,200])
+	ax.set_ylim3d([-200,200])
+	ax.set_zlim3d([-200,200])
+	ax.set_title('dog simulation')
+	#ax.axis('equal')
+	lines = [ax.plot(dat[0,0:], dat[1,0:], dat[2,0:])[0] for dat in data]
+	dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True, fargs = (Tcps,  dog, lines), interval = stepTime)
 	plt.show()
 #don't show figure and animation, not need a screen
 else :
-	update_fig(0, Tcps, lines, dog)
+	update_fig(0, Tcps, dog)
