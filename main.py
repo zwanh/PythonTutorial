@@ -4,7 +4,11 @@ import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 from trajectoryInterpolation import *		#import all class and functions
 from dogPlatform import *
+import threading
+
 frameNum = 20
+stepTime = 50		#units:ms
+enableAni = False	#enable animation or not	
 
 def genDogLegTcps(dog):
 	'''generate a series of dog legTcps'''
@@ -36,12 +40,18 @@ def genDogLegTcps(dog):
 
 def update_fig(num, Tcps, lines, dog):
 	print 'num', num
-	tcp = Tcps[num]
-	data = plotData(tcp, dog)
-	for line, dat in zip(lines, data):
-		line.set_data(dat[0:2])
-		line.set_3d_properties(dat[2])
-	return lines
+	if enableAni :
+		tcp = Tcps[num]
+		data = plotData(tcp, dog)
+		for line, dat in zip(lines, data):
+			line.set_data(dat[0:2])
+			line.set_3d_properties(dat[2])
+		return lines
+	else:
+		tcp = Tcps[num]
+		dog.setLegTcp(tcp)
+		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, lines, dog])
+		t.start()
 
 def plotData(tcp, dog):
 	dog.setLegTcp(tcp)
@@ -85,8 +95,10 @@ ax.set_title('dog simulation')
 #ax.axis('equal')
 
 Tcps = genDogLegTcps(dog)
-dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True,
-			 fargs = (Tcps, lines, dog), interval = 50)
-plt.show()
-
-
+#show figure and animation, need a screen
+if (enableAni) :
+	dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True, fargs = (Tcps, lines, dog), interval = stepTime)
+	plt.show()
+#don't show figure and animation, not need a screen
+else :
+	update_fig(0, Tcps, lines, dog)
