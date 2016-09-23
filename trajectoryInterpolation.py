@@ -44,8 +44,8 @@ def tcpTrajectoryInterp(tcp, dTcp1, dTcp2):
 		p1 = tcp1[i, 0:3]
 		p2 = tcp2[i, 0:3]
 		p3 = tcp3[i, 0:3]
-		dp0 = p3 - p1
-		dp1 = p3 - p1
+		dp0 = p2 - p1
+		dp1 = p3 - p2
 		A[i] = trajectoryInterpolation(p1, p2, p3, dp0, dp1)
 	return A
 
