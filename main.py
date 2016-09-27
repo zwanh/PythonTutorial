@@ -5,52 +5,30 @@ import matplotlib.animation as animation
 from trajectoryInterpolation import *		#import all class and functions
 from dogPlatform import *
 import threading
-
+from gaitGenerator import *
 frameNum = 20
 stepTime = 50		#units:ms
 enableAni = True	#enable animation or not	
-
-def genDogLegTcps(dog):
-	'''generate a series of dog legTcps'''
-	tcp = dog.getLegTcp()
-	dTcp1 = np.array([[0, 30, 50, 0],\
-			  [0, -30, 0, 0],\
-			  [0, -30, 0, 0],\
-			  [0, 30, 50, 0]])
-	dTcp2 = np.array([[0, 60, 0, 0],\
-			  [0, -60, 0, 0],\
-			  [0, -60, 0, 0],\
-			  [0, 60, 0, 0]])
-	A1 = tcpTrajectoryInterp(tcp, dTcp1, dTcp2)
-	
-	tcp = tcp + dTcp2
-	dTcp1 = np.array([[0, -30, 0, 0],\
-			  [0, 30, 50, 0],\
-			  [0, 30, 50, 0],\
-			  [0, -30, 0, 0]])
-	dTcp2 = np.array([[0, -60, 0, 0],\
-			  [0, 60, 0, 0],\
-			  [0, 60, 0, 0],\
-			  [0, -60, 0, 0]])
-	A2 = tcpTrajectoryInterp(tcp, dTcp1, dTcp2)
-	Tcps1 = [tcpOnTrajectory(A1, np.float(t)/frameNum) for t in range(1, frameNum+1)]
-	Tcps2 = [tcpOnTrajectory(A2, np.float(t)/frameNum) for t in range(1, frameNum+1)]
-	Tcps = Tcps1 + Tcps2
-	return Tcps
-
-def update_fig(num, Tcps, dog, lines = None):
+alfa = 0.99		#smooth coefficiency
+def update_fig(num, Tcps, dTcps, dog, lines = None):
 	print 'num', num
 	if enableAni :
-		tcp = Tcps[num]
+		#smooth algorithem, dTcps are same as Tcps' steps. and the Tcps is a standard gait
+		#with the programe running, dog's gait will be same as Tcps
+		if num  == 1:
+			tcp = alfa * (dog.getLegTcp() + dTcps[num]) + (1 - alfa) * Tcps[num]
+		else:
+			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
 		data = plotData(tcp, dog)
 		for line, dat in zip(lines, data):
 			line.set_data(dat[0:2])
 			line.set_3d_properties(dat[2])
 		return lines
 	else:
-		tcp = Tcps[num]
+		dtcp = dTcps[num]
+		tcp = 1 * (dog.getLegTcp() + dtcp) + 0 * Tcps[num]
 		dog.setLegTcp(tcp)
-		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dog])
+		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dTcps, dog])
 		t.start()
 
 def plotData(tcp, dog):
@@ -75,16 +53,18 @@ initLegPose = np.array([[0, -15, 30],\
 			[0, -15, 30]])
 dog.setLegPose(initLegPose)
 tcp = dog.getLegTcp()
-dTcp1 = np.array([[0, -30, 0, 0],\
-		  [0, 30, 0, 0],\
-		  [0, 30, 0, 0],\
-		  [0, -30, 0, 0]])
-dog.setLegTcp(tcp + dTcp1)
+dTcp1 = np.array([[0, 0, 0, 0],\
+		  [0, 0, 0, 0],\
+		  [0, 0, 0, 0],\
+		  [0, 0, 0, 0]])
+#dog.setLegTcp(tcp + dTcp1)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
-
-Tcps = genDogLegTcps(dog)
+pace = gaitPace()
+trot = gaitTrot()
+Tcps = pace.getTcps(100, 50, frameNum)
+dTcps = pace.getTcpsRelative(100, 10, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
@@ -95,8 +75,8 @@ if (enableAni) :
 	ax.set_title('dog simulation')
 	#ax.axis('equal')
 	lines = [ax.plot(dat[0,0:], dat[1,0:], dat[2,0:])[0] for dat in data]
-	dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True, fargs = (Tcps,  dog, lines), interval = stepTime)
+	dogAni = animation.FuncAnimation(fig, update_fig,frameNum * 2, repeat = True, fargs = (Tcps, dTcps, dog, lines), interval = stepTime)
 	plt.show()
 #don't show figure and animation, not need a screen
 else :
-	update_fig(0, Tcps, dog)
+	update_fig(0, Tcps, dTcps, dog)
