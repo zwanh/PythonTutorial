@@ -8,7 +8,7 @@ import threading
 from gaitGenerator import *
 frameNum = 20
 stepTime = 50		#units:ms
-enableAni = True	#enable animation or not	
+enableAni = False	#enable animation or not	
 alfa = 0.99		#smooth coefficiency
 def update_fig(num, Tcps, dTcps, dog, lines = None):
 	print 'num', num
@@ -25,8 +25,10 @@ def update_fig(num, Tcps, dTcps, dog, lines = None):
 			line.set_3d_properties(dat[2])
 		return lines
 	else:
-		dtcp = dTcps[num]
-		tcp = 1 * (dog.getLegTcp() + dtcp) + 0 * Tcps[num]
+		if num  == 1:
+			tcp = alfa * (dog.getLegTcp() + dTcps[num]) + (1 - alfa) * Tcps[num]
+		else:
+			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
 		dog.setLegTcp(tcp)
 		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dTcps, dog])
 		t.start()
