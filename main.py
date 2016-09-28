@@ -6,16 +6,16 @@ from trajectoryInterpolation import *		#import all class and functions
 from dogPlatform import *
 import threading
 from gaitGenerator import *
-frameNum = 20
+frameNum = 10
 stepTime = 50		#units:ms
-enableAni = False	#enable animation or not	
-alfa = 0.99		#smooth coefficiency
+enableAni = True	#enable animation or not	
+alfa = 0.9		#smooth coefficiency
 def update_fig(num, Tcps, dTcps, dog, lines = None):
 	print 'num', num
 	if enableAni :
 		#smooth algorithem, dTcps are same as Tcps' steps. and the Tcps is a standard gait
 		#with the programe running, dog's gait will be same as Tcps
-		if num  == 1:
+		if num  == 0 :
 			tcp = alfa * (dog.getLegTcp() + dTcps[num]) + (1 - alfa) * Tcps[num]
 		else:
 			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
@@ -25,7 +25,7 @@ def update_fig(num, Tcps, dTcps, dog, lines = None):
 			line.set_3d_properties(dat[2])
 		return lines
 	else:
-		if num  == 1:
+		if num  == 0:
 			tcp = alfa * (dog.getLegTcp() + dTcps[num]) + (1 - alfa) * Tcps[num]
 		else:
 			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
@@ -54,19 +54,14 @@ initLegPose = np.array([[0, -15, 30],\
 			[0, -15, 30],\
 			[0, -15, 30]])
 dog.setLegPose(initLegPose)
-tcp = dog.getLegTcp()
-dTcp1 = np.array([[0, 0, 0, 0],\
-		  [0, 0, 0, 0],\
-		  [0, 0, 0, 0],\
-		  [0, 0, 0, 0]])
-#dog.setLegTcp(tcp + dTcp1)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
 pace = gaitPace()
 trot = gaitTrot()
-Tcps = pace.getTcps(100, 50, frameNum)
-dTcps = pace.getTcpsRelative(100, 10, frameNum)
+walk = gaitWalk()
+Tcps = walk.getTcps(50, 50, frameNum)
+dTcps = walk.getTcpsRelative(50, 50, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
