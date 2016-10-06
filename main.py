@@ -8,8 +8,9 @@ import threading
 from gaitGenerator import *
 frameNum = 10
 stepTime = 50		#units:ms
-enableAni = True	#enable animation or not	
+enableAni = False	#enable animation or not	
 alfa = 0.9		#smooth coefficiency
+
 def update_fig(num, Tcps, dTcps, dog, lines = None):
 	print 'num', num
 	if enableAni :
@@ -30,9 +31,11 @@ def update_fig(num, Tcps, dTcps, dog, lines = None):
 		else:
 			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
 		dog.setLegTcp(tcp)
-		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dTcps, dog])
+		num = (num + 1) % (2 * frameNum)
+		t = threading.Timer(stepTime *0.001, update_fig, [num, Tcps, dTcps, dog])
 		t.start()
 
+#calculate four legs TCP and knees points, fix
 def plotData(tcp, dog):
 	dog.setLegTcp(tcp)
 	fix0 = dog.getFixPoints()
