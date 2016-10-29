@@ -18,6 +18,10 @@ alfa = 0.5		#smooth coefficiency
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(50)
 
+bias = np.array([[0, 0, 0],\
+				 [0, 0, 0],\
+				 [0, 0, 0],\
+				 [0, 0, 0]])
 
 def set_servo_angle(angle):
 	for i in range(0, 12):
