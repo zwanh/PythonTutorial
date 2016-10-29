@@ -1,3 +1,4 @@
+#from __future__ import *
 import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
@@ -6,10 +7,32 @@ from trajectoryInterpolation import *		#import all class and functions
 from dogPlatform import *
 import threading
 from gaitGenerator import *
+import time
+import Adafruit_PCA9685
+
 frameNum = 10
-stepTime = 50		#units:ms
-enableAni = True	#enable animation or not	
-alfa = 0.9		#smooth coefficiency
+stepTime = 30		#units:ms
+enableAni = False	#enable animation or not	
+alfa = 0.5		#smooth coefficiency
+
+pwm = Adafruit_PCA9685.PCA9685()
+pwm.set_pwm_freq(50)
+
+
+def set_servo_angle(angle):
+	for i in range(0, 12):
+		pwm.set_pwm(i, i, int(angle[i]*2.26+105))
+
+
+def motorDriver(joints):
+	leg1 = [90 + joints[0][0], 90 - joints[0][1], joints[0][2]]
+	leg2 = [90 + joints[1][0], 90 + joints[1][1], 180 - joints[1][2]]
+	leg3 = [90 - joints[2][0], 90 - joints[2][1], joints[2][2]]
+	leg4 = [90 - joints[3][0], 90 + joints[3][1], 180 - joints[3][2]]
+	leg = leg1 + leg2 + leg3 + leg4
+	set_servo_angle(leg)	
+	print(joints)
+
 def update_fig(num, Tcps, dTcps, dog, lines = None):
 	print 'num', num
 	if enableAni :
@@ -30,6 +53,9 @@ def update_fig(num, Tcps, dTcps, dog, lines = None):
 		else:
 			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
 		dog.setLegTcp(tcp)
+		legPose = dog.getLegPose()
+#		print(legPose)	
+		motorDriver(legPose)
 		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dTcps, dog])
 		t.start()
 
@@ -47,21 +73,22 @@ def plotData(tcp, dog):
 	data = [leg[0], leg[1], leg[2], leg[3], fix]
 	return data
 
-
 dog = dogPlatform()
-initLegPose = np.array([[0, -15, 30],\
-			[0, -15, 30],\
-			[0, -15, 30],\
-			[0, -15, 30]])
+initLegPose = np.array([[0, 0, 0],\
+						[0, 0, 0],\
+						[0, 0, 0],\
+						[0, 0, 0]])
 dog.setLegPose(initLegPose)
+motorDriver(initLegPose)
+
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
 pace = gaitPace()
 trot = gaitTrot()
 walk = gaitWalk()
-Tcps = walk.getTcps(50, 50, frameNum)
-dTcps = walk.getTcpsRelative(50, 50, frameNum)
+Tcps = walk.getTcps(80, 30, frameNum)
+dTcps = walk.getTcpsRelative(80, 30, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
@@ -76,4 +103,5 @@ if (enableAni) :
 	plt.show()
 #don't show figure and animation, not need a screen
 else :
-	update_fig(0, Tcps, dTcps, dog)
+	print("init")
+#	update_fig(0, Tcps, dTcps, dog)
