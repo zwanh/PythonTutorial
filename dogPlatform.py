@@ -12,21 +12,21 @@ class dogPlatform:
 		self.legTcp = np.zeros((4,4))		#record four legPose(x,y,z,1)
 		self.legPose = np.zeros((4,3))		#record four legs' joins
 		#dimensiton parameters
-		self.width = 200
-		self.height = 300
+		self.width = 100
+		self.height = 200
 		#leg order: front_left, front_right, rear_left, rear_right
 		self.legFix = np.array([[-self.width / 2., self.height / 2., 0, 1],\
 					[self.width / 2., self.height / 2., 0, 1],\
 					[-self.width / 2., -self.height / 2., 0, 1],\
 					[self.width / 2., -self.height / 2., 0, 1]])
-		self.legUpper = np.array([[0, 0, -100],\
-					  [0, 0, -100],\
-					  [0, 0, -100],\
-					  [0, 0, -100]])
-		self.legLow = np.array([[0, 0, -100],\
-					[0, 0, -100],\
-					[0, 0, -100],\
-					[0, 0, -100]])
+		self.legUpper = np.array([[0, 0, -65],\
+					  [0, 0, -65],\
+					  [0, 0, -65],\
+					  [0, 0, -65]])
+		self.legLow = np.array([[0, 0, -40],\
+					[0, 0, -40],\
+					[0, 0, -40],\
+					[0, 0, -40]])
 		dogPlatform.forwardKinematics(self)
 	def inverseKinematics(self):
 		'''Calculate leg joints from Tcp'''

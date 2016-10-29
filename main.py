@@ -10,18 +10,18 @@ from gaitGenerator import *
 import time
 import Adafruit_PCA9685
 
-frameNum = 6
-stepTime = 40		#units:ms
+frameNum = 10
+stepTime = 25		#units:ms
 enableAni = False	#enable animation or not	
 alfa = 0.5		#smooth coefficiency
 
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(50)
 
-bias = np.array([[10, 5, 0],\
-				 [-10, 5, -5],\
-				 [10, -4, 3],\
-				 [-10, 5, -5]])
+bias = np.array([[10, 3, 0],\
+				 [-10, -10, 5],\
+				 [10, 0, -5],\
+				 [-10, 0, 0]])
 
 def set_servo_angle(angle):
 	for i in range(0, 12):
@@ -88,11 +88,11 @@ motorDriver(initLegPose)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
-pace = gaitPace(-180)
-trot = gaitTrot(-180)
-walk = gaitWalk(-180)
-Tcps = pace.getTcps(50, 10, frameNum)
-dTcps = pace.getTcpsRelative(50,10, frameNum)
+pace = gaitPace(-90)
+trot = gaitTrot(-90)
+walk = gaitWalk(-90)
+Tcps = pace.getTcps(30, 20, frameNum)
+dTcps = pace.getTcpsRelative(30,20, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
@@ -108,4 +108,4 @@ if (enableAni) :
 #don't show figure and animation, not need a screen
 else :
 	print("init")
-	update_fig(0, Tcps, dTcps,dog)
+#	update_fig(0, Tcps, dTcps,dog)
