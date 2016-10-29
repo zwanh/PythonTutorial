@@ -10,18 +10,18 @@ from gaitGenerator import *
 import time
 import Adafruit_PCA9685
 
-frameNum = 10
-stepTime = 30		#units:ms
+frameNum = 6
+stepTime = 40		#units:ms
 enableAni = False	#enable animation or not	
 alfa = 0.5		#smooth coefficiency
 
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(50)
 
-bias = np.array([[0, 0, 0],\
-				 [0, 0, 0],\
-				 [0, 0, 0],\
-				 [0, 0, 0]])
+bias = np.array([[10, 5, 0],\
+				 [-10, 5, -5],\
+				 [10, -4, 3],\
+				 [-10, 5, -5]])
 
 def set_servo_angle(angle):
 	for i in range(0, 12):
@@ -29,13 +29,14 @@ def set_servo_angle(angle):
 
 
 def motorDriver(joints):
+	print(joints)
+	joints = joints + bias
 	leg1 = [90 + joints[0][0], 90 - joints[0][1], joints[0][2]]
 	leg2 = [90 + joints[1][0], 90 + joints[1][1], 180 - joints[1][2]]
 	leg3 = [90 - joints[2][0], 90 - joints[2][1], joints[2][2]]
 	leg4 = [90 - joints[3][0], 90 + joints[3][1], 180 - joints[3][2]]
 	leg = leg1 + leg2 + leg3 + leg4
 	set_servo_angle(leg)	
-	print(joints)
 
 def update_fig(num, Tcps, dTcps, dog, lines = None):
 	print 'num', num
@@ -58,7 +59,6 @@ def update_fig(num, Tcps, dTcps, dog, lines = None):
 			tcp = alfa * (dog.getLegTcp() + dTcps[num] - dTcps[num - 1]) + (1 - alfa) * Tcps[num]
 		dog.setLegTcp(tcp)
 		legPose = dog.getLegPose()
-#		print(legPose)	
 		motorDriver(legPose)
 		t = threading.Timer(stepTime *0.001, update_fig, [(num + 1) % (2 * frameNum), Tcps, dTcps, dog])
 		t.start()
@@ -88,11 +88,11 @@ motorDriver(initLegPose)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
-pace = gaitPace()
-trot = gaitTrot()
-walk = gaitWalk()
-Tcps = walk.getTcps(80, 30, frameNum)
-dTcps = walk.getTcpsRelative(80, 30, frameNum)
+pace = gaitPace(-180)
+trot = gaitTrot(-180)
+walk = gaitWalk(-180)
+Tcps = pace.getTcps(50, 10, frameNum)
+dTcps = pace.getTcpsRelative(50,10, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
@@ -108,4 +108,4 @@ if (enableAni) :
 #don't show figure and animation, not need a screen
 else :
 	print("init")
-#	update_fig(0, Tcps, dTcps, dog)
+	update_fig(0, Tcps, dTcps,dog)
