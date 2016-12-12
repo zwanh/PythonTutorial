@@ -88,11 +88,11 @@ motorDriver(initLegPose1)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
-pace = gaitPace(-95)
+pace = gaitPace(-150)
 trot = gaitTrot(-80)
 walk = gaitWalk(-80)
-Tcps = pace.getTcps(20, 50, frameNum)
-dTcps = pace.getTcpsRelative(20, 50, frameNum)
+Tcps = pace.getTcps(15, 40, frameNum)
+dTcps = pace.getTcpsRelative(15, 40, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
