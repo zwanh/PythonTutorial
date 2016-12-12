@@ -10,7 +10,7 @@ from gaitGenerator import *
 import time
 import Adafruit_PCA9685
 
-frameNum = 10
+frameNum = 5
 stepTime = 25		#units:ms
 enableAni = False	#enable animation or not	
 alfa = 0.5		#smooth coefficiency
@@ -18,10 +18,10 @@ alfa = 0.5		#smooth coefficiency
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(50)
 
-bias = np.array([[10, 3, 0],\
-				 [-10, -10, 5],\
-				 [10, 0, -5],\
-				 [-10, 0, 0]])
+bias = np.array([[-7, 0, -19],\
+				 [-3, -2, 18],\
+				 [-10, -8, -10],\
+				 [-6, 4, 10]])
 
 def set_servo_angle(angle):
 	for i in range(0, 12):
@@ -31,10 +31,10 @@ def set_servo_angle(angle):
 def motorDriver(joints):
 	print(joints)
 	joints = joints + bias
-	leg1 = [90 + joints[0][0], 90 - joints[0][1], joints[0][2]]
-	leg2 = [90 + joints[1][0], 90 + joints[1][1], 180 - joints[1][2]]
-	leg3 = [90 - joints[2][0], 90 - joints[2][1], joints[2][2]]
-	leg4 = [90 - joints[3][0], 90 + joints[3][1], 180 - joints[3][2]]
+	leg1 = [90 - joints[0][0], 90 - joints[0][1], 90 - joints[0][2]]
+	leg2 = [90 - joints[1][0], 90 + joints[1][1], 90 + joints[1][2]]
+	leg3 = [90 - joints[2][0], 90 - joints[2][1], 90 - joints[2][2]]
+	leg4 = [90 - joints[3][0], 90 + joints[3][1], 90 +  joints[3][2]]
 	leg = leg1 + leg2 + leg3 + leg4
 	set_servo_angle(leg)	
 
@@ -78,21 +78,21 @@ def plotData(tcp, dog):
 	return data
 
 dog = dogPlatform()
-initLegPose = np.array([[0, 0, 0],\
+
+initLegPose1 = np.array([[0, 0, 0],\
 						[0, 0, 0],\
 						[0, 0, 0],\
 						[0, 0, 0]])
-dog.setLegPose(initLegPose)
-motorDriver(initLegPose)
-
+dog.setLegPose(initLegPose1)
+motorDriver(initLegPose1)
 
 #init plot
 data = plotData(dog.getLegTcp(), dog)
-pace = gaitPace(-90)
-trot = gaitTrot(-90)
-walk = gaitWalk(-90)
-Tcps = pace.getTcps(30, 20, frameNum)
-dTcps = pace.getTcpsRelative(30,20, frameNum)
+pace = gaitPace(-95)
+trot = gaitTrot(-80)
+walk = gaitWalk(-80)
+Tcps = pace.getTcps(20, 50, frameNum)
+dTcps = pace.getTcpsRelative(20, 50, frameNum)
 #show figure and animation, need a screen
 if (enableAni) :
 	fig = plt.figure()
@@ -108,4 +108,4 @@ if (enableAni) :
 #don't show figure and animation, not need a screen
 else :
 	print("init")
-#	update_fig(0, Tcps, dTcps,dog)
+	update_fig(0, Tcps, dTcps,dog)
