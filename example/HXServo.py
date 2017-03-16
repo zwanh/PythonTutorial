@@ -1,6 +1,8 @@
 import numpy as np
 import serial
 from time import sleep
+import string
+import binascii
 
 class HXServo :
 	'''servo comunication'''
@@ -145,75 +147,63 @@ class HXServo :
 		'''read data from servo device'''
 		checkSum = 0
 		index = 0
-		buff = np.zeros(32)
 		ret = 0
 		if ((devAddr >= self.BROADCAST_BUSADDR) or devAddr <= self.MASTER_BUSADDR):
 			return ret
-		buff[index] = 0xaa	#head
-		index += 1
-		buff[index] = 0x55
+		buff = [0xaa, 0x55]	#hea
 		#master bus address
-		index += 1
-		buff[index] = (self.MASTER_BUSADDR >> 8) & 0xff
-		buff[index + 1] = self.MASTER_BUSADDR & 0xff
+		buff.append((self.MASTER_BUSADDR >> 8) & 0xff)
+		buff.append(self.MASTER_BUSADDR & 0xff)
 		#device address
-		index += 2
-		buff[index] = (devAddr >> 8) & 0xff
-		buff[index + 1] = devAddr & 0xff
-		if buff[index + 1] == 0xaa:
-			buff[index + 2] = 0
-			index += 3
-		else:
-			index += 2
+		buff.append((devAddr >> 8) & 0xff)
+		buff.append(devAddr & 0xff)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#length
-		buff[index] = 8
+		buff.append(8)
 		
 		#type
-		index += 1
-		buff[index] = self.READ_REG &0xff
-		if buff[index] == 0xaa:
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index +=1
+		buff.append(self.READ_REG &0xff)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#register address
-		buff[index] = regAddr & 0xff
-		if (buff[index] == 0xaa):
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index += 1
-		
+		buff.append(regAddr & 0xff)
+		if (buff[len(buff) - 1] == 0xaa):
+			buff.append(0)
 		#checksum
-		checksum = self.checkSumCal(buff, 2, index)
-		buff[index] = checkSum
-		if buff[index] == 0xaa:
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index += 1
+		checksum = self.checkSumCal(buff, 2, len(buff))
+		print hex(checksum)
+		buff.append(checksum)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#tail
-		buff[index] = 0xaa
-		buff[index + 1] = 0x81
-		#return buff
-#		for x in xrange(0, index + 1):
-		self.ser.write(buff)
-		sleep(0.1)
+		buff.append(0xaa)
+		buff.append(0x81)
 		print buff
+		#return buf
+		strBuff = ''
+		for i in range(0, len(buff)):
+			strBuff += hex(buff[i])
+		self.ser.write(strBuff)
+		print "strBuff:", strBuff
+#		self.ser.write(strBuff)
+		sleep(0.1)
 		#receive dat
+		reBuff = []
 		while True:
 			index = self.ser.inWaiting()
 			print 'index:', index
 			if index != 0:
-				buff = self.ser.read(24)
+				reBuff = self.ser.read(64)
 				self.ser.flushInput()
 				break
 			sleep(0.1)
 		buffData = np.zeros(24)
-		print 'buff:', buff
-		print 'length of buff', len(buff)
-		for i in range(0, len(buff)):
-			print (buff[i])
+		print 'received buff:', reBuff
+		print 'length of buff', len(reBuff)
+		return 0
+#		for i in range(0, len(buff)):
+#			print (buff[i])
 		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
 			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
 			for i in xrange(2, index - 2):
@@ -230,12 +220,11 @@ class HXServo :
 	def checkSumCal(self, data, start, end):
 		check = 0x00 
 		for x in xrange(start, end):
-			print hex(int(data[x]))
+			print hex(data[x])
 			check = int(check) ^ int(data[x])
-		print hex(check)
 		return check
 
 
 servo = HXServo()
-#ans = servo.read(0x07, servo.HX_P_GAIN)
-servo.write(0x07, servo.HX_WORKING_MODE, 2)
+ans = servo.read(0x07, servo.HX_P_GAIN)
+#servo.write(0x07, servo.HX_WORKING_MODE, 2)
