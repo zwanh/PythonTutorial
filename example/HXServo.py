@@ -1,11 +1,12 @@
 import numpy as np
 import serial
+from time import sleep
 
 class HXServo :
 	'''servo comunication'''
 	def __init__(self):
 		'''initialize the constant var'''
-		self.ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.1)
+		self.ser = serial.Serial('/dev/ttyUSB0', 921600, timeout = 0.5)
 		#register addresses statement
 		self.HX_POSITION               = 0x01
 		self.HX_SPEED                  = 0x02
@@ -62,8 +63,8 @@ class HXServo :
 		buff[index] = 0x55
 		#master bus address
 		index += 1
-		buff[index] = (MASTER_BUSADDR >> 8) & 0xff
-		buff[index + 1] = MASTER_BUSADDR & 0xff
+		buff[index] = (self.MASTER_BUSADDR >> 8) & 0xff
+		buff[index + 1] = self.MASTER_BUSADDR & 0xff
 		#device address
 		index += 2
 		buff[index] = (devAddr >> 8) & 0xff
@@ -74,10 +75,10 @@ class HXServo :
 		else:
 			index += 2
 		#length
-		buff[index] = 8
+		buff[index] = 10
 		#type
 		index += 1
-		buff[index] = WRITE_REG &0xff
+		buff[index] = self.WRITE_REG &0xff
 		if buff[index] == 0xaa:
 			buff[index + 1] = 0
 			index += 2
@@ -104,7 +105,7 @@ class HXServo :
 		else:
 			index += 1
 		#checksum
-		checksum = checkSumCal(buff, 2, index)
+		checksum = self.checkSumCal(buff, 2, index)
 		buff[index] = checkSum
 		if buff[index] == 0xaa:
 			buff[index + 1] = 0
@@ -114,12 +115,17 @@ class HXServo :
 		#tail
 		buff[index] = 0xaa
 		buff[index + 1] = 0x81
-		return buff
-
+		self.ser.write(buff)
 		#receive data
-		index = serial.inWaiting()
-		buff = serial.read(24)
-		serial.flushInput()
+		while True:
+			index = self.ser.inWaiting()
+			print 'index:', index
+			if index != 0:
+				buff = self.ser.read(24)
+				self.ser.flushInput()
+				break
+			sleep(0.1)
+		print "buff", buff
 		buffData = np.zeros(24)
 		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
 			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
@@ -128,11 +134,11 @@ class HXServo :
 				if buff[i] == 0xaa:
 					continue
 
-			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))==MASTER_BUSADDR)):
-				if((buffData[4]==9) and (buffData[5]==ANSWER) and (buffData[6]==regAddr)):
-					checkSum = checkSumCal (buffData, 0, 8);
-				if((checkSum==buffData[8]) and (buffData[7]==SETTING_OK)):
-					ret = SETTING_OK;
+			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))== self.MASTER_BUSADDR)):
+				if((buffData[4]==9) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
+					checkSum = self.checkSumCal (buffData, 0, 8);
+				if((checkSum==buffData[8]) and (buffData[7]== self.SETTING_OK)):
+					ret = self.SETTING_OK;
 		return ret
 
 	def read(self, devAddr, regAddr):
@@ -190,15 +196,24 @@ class HXServo :
 		buff[index] = 0xaa
 		buff[index + 1] = 0x81
 		#return buff
-
+#		for x in xrange(0, index + 1):
+		self.ser.write(buff)
+		sleep(0.1)
 		print buff
-		#receive data
-		index = self.ser.inWaiting()
-		buff = self.ser.read(24)
-		self.ser.flushInput()
+		#receive dat
+		while True:
+			index = self.ser.inWaiting()
+			print 'index:', index
+			if index != 0:
+				buff = self.ser.read(24)
+				self.ser.flushInput()
+				break
+			sleep(0.1)
 		buffData = np.zeros(24)
-		print 'index:', index
 		print 'buff:', buff
+		print 'length of buff', len(buff)
+		for i in range(0, len(buff)):
+			print (buff[i])
 		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
 			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
 			for i in xrange(2, index - 2):
@@ -222,5 +237,5 @@ class HXServo :
 
 
 servo = HXServo()
-ans = servo.read(0x07, servo.HX_P_GAIN)
-print ans
+#ans = servo.read(0x07, servo.HX_P_GAIN)
+servo.write(0x07, servo.HX_WORKING_MODE, 2)
