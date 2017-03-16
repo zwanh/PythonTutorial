@@ -56,78 +56,61 @@ class HXServo :
 		'''write data to servo device'''
 		checkSum = 0
 		index = 0
-		buff = np.zeros(32)
 		ret = 0
-		if ((devAddr >= self.BROADCAST_BUSADDR) or (devAddr <= self.MASTER_BUSADDR)):
+		if ((devAddr > self.BROADCAST_BUSADDR) or devAddr <= self.MASTER_BUSADDR):
 			return ret
-		buff[index] = 0xaa	#head
-		index += 1
-		buff[index] = 0x55
+		buff = [0xaa, 0x55]	#hea
 		#master bus address
-		index += 1
-		buff[index] = (self.MASTER_BUSADDR >> 8) & 0xff
-		buff[index + 1] = self.MASTER_BUSADDR & 0xff
+		buff.append((self.MASTER_BUSADDR >> 8) & 0xff)
+		buff.append(self.MASTER_BUSADDR & 0xff)
 		#device address
-		index += 2
-		buff[index] = (devAddr >> 8) & 0xff
-		buff[index + 1] = devAddr & 0xff
-		if buff[index + 1] == 0xaa:
-			buff[index + 2] = 0
-			index += 3
-		else:
-			index += 2
+		buff.append((devAddr >> 8) & 0xff)
+		buff.append(devAddr & 0xff)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#length
-		buff[index] = 10
+		buff.append(10)
+		
 		#type
-		index += 1
-		buff[index] = self.WRITE_REG &0xff
-		if buff[index] == 0xaa:
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index +=1
+		buff.append(self.WRITE_REG &0xff)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#register address
-		buff[index] = regAddr & 0xff
-		if (buff[index] == 0xaa):
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index += 1
+		buff.append(regAddr & 0xff)
+		if (buff[len(buff) - 1] == 0xaa):
+			buff.append(0)
 		#data
-		buff[index] = (data >> 8) & 0xff
-		if buff[index] == 0xaa:
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index += 1
-		buff[index] = data & 0xff
-		if buff[index] == 0xaa:
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index += 1
+		buff.append((data>>8) & 0xff)
+		if buff[len(buff)-1] == 0xaa:
+			buff.append(0)
+		buff.append(data & 0xff)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#checksum
-		checksum = self.checkSumCal(buff, 2, index)
-		buff[index] = checkSum
-		if buff[index] == 0xaa:
-			buff[index + 1] = 0
-			index += 2
-		else:
-			index += 1
+		checksum = self.checkSumCal(buff, 2, len(buff))
+		print hex(checksum)
+		buff.append(checksum)
+		if buff[len(buff) - 1] == 0xaa:
+			buff.append(0)
 		#tail
-		buff[index] = 0xaa
-		buff[index + 1] = 0x81
-		self.ser.write(buff)
+		buff.append(0xaa)
+		buff.append(0x81)
+			
+		print buff
+		strBuff = ''
+		for i in range(0, len(buff)):
+			strBuff += chr(buff[i])
+		self.ser.write(strBuff)
+		print "strBuff:", strBuff
+		print "length of strBuff:", len(strBuff)
+		
 		#receive data
-		while True:
-			index = self.ser.inWaiting()
-			print 'index:', index
-			if index != 0:
-				buff = self.ser.read(24)
-				self.ser.flushInput()
-				break
-			sleep(0.1)
-		print "buff", buff
+		reBuff = []
+		sleep(1)
+		data = self.ser.readline()
+		print 1, data		
+		self.ser.flushInput()
+		
 		buffData = np.zeros(24)
 		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
 			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
@@ -138,8 +121,8 @@ class HXServo :
 
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))== self.MASTER_BUSADDR)):
 				if((buffData[4]==9) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
-					checkSum = self.checkSumCal (buffData, 0, 8);
-				if((checkSum==buffData[8]) and (buffData[7]== self.SETTING_OK)):
+					checksum = self.checkSumCal (buffData, 0, 8);
+				if((checksum==buffData[8]) and (buffData[7]== self.SETTING_OK)):
 					ret = self.SETTING_OK;
 		return ret
 
@@ -216,8 +199,8 @@ class HXServo :
 					continue
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))==self.MASTER_BUSADDR)):
 				if((buffData[4]==9) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
-					checkSum = checkSumCal (buffData, 0, 9);
-				if(checkSum==buffData[9]):
+					checksum = self.checkSumCal (buffData, 0, 9);
+				if(checksum==buffData[9]):
 					ret = (buffData[7] << 8) | buffData[8];
 		return ret
 
@@ -230,5 +213,6 @@ class HXServo :
 
 
 servo = HXServo()
-ans = servo.read(0x07, servo.HX_P_GAIN)
-#servo.write(0x07, servo.HX_WORKING_MODE, 2)
+#ans = servo.read(0x07, servo.HX_P_GAIN)
+servo.write(1000, servo.HX_BAUDRATE, 5)
+servo.write(1000, 0x1d, 1)
