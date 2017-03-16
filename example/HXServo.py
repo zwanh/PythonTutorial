@@ -179,17 +179,24 @@ class HXServo :
 		#tail
 		buff.append(0xaa)
 		buff.append(0x81)
+		
+		
 		print buff
-		#return buf
 		strBuff = ''
 		for i in range(0, len(buff)):
-			strBuff += hex(buff[i])
+			strBuff += chr(buff[i])
 		self.ser.write(strBuff)
 		print "strBuff:", strBuff
-#		self.ser.write(strBuff)
-		sleep(0.1)
-		#receive dat
+		print "length of strBuff:", len(strBuff)
+		#receive data
 		reBuff = []
+		sleep(1)
+		data = self.ser.readline()
+		print 1, data		
+		self.ser.flushInput()
+
+		#rceive nothing?
+		print "received data: ", data, len(data)
 		while True:
 			index = self.ser.inWaiting()
 			print 'index:', index
@@ -201,9 +208,6 @@ class HXServo :
 		buffData = np.zeros(24)
 		print 'received buff:', reBuff
 		print 'length of buff', len(reBuff)
-		return 0
-#		for i in range(0, len(buff)):
-#			print (buff[i])
 		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
 			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
 			for i in xrange(2, index - 2):
