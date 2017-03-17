@@ -1,122 +1,133 @@
 import numpy as np
 import serial
 from time import sleep
-import string
-import binascii
 
 class HXServo :
-	'''servo comunication'''
-	def __init__(self):
-		'''initialize the constant var'''
-		self.ser = serial.Serial('/dev/ttyUSB0', 921600, timeout = 0.5)
-		#register addresses statement
-		self.HX_POSITION               = 0x01
-		self.HX_SPEED                  = 0x02
-		self.HX_ADDR                   = 0x03
-		self.HX_BAUDRATE               = 0x04
-		self.HX_COMMUNICATION_MODE     = 0x21
-		self.HX_P_GAIN                 = 0x05
-		self.HX_D_GAIN                 = 0x06
-		self.HX_I_GAIN                 = 0x07
-		self.HX_PDI_GAIN               = 0x08
-		self.HX_PDI_DEADBAND           = 0x1f
-		self.HX_ACCELERATION           = 0x20
-		self.HX_CW_FLEXIBLE_MARGIN     = 0x09
-		self.HX_CCW_FLEXIBLE_MARGIN    = 0x0a
-		self.HX_CW_FLEXIBLE_SLOPE      = 0x0b
-		self.HX_CCW_FLEXIBLE_SLOPE     = 0x0c
-		self.HX_WORKING_MODE           = 0x0d
-		self.HX_SERVO_STATE            = 0x0e
-		self.HX_MAX_POSITION           = 0x0f
-		self.HX_MIN_POSITION           = 0x10
-		self.HX_MAX_TEMPERATURE        = 0x11
-		self.HX_MAX_VOLTAGE            = 0x12
-		self.HX_MIN_VOLTAGE            = 0x13
-		self.HX_MAX_TORQUE             = 0x14
-		self.HX_ALL_WRITEREAD          = 0x15
-		self.HX_CURRENT_POSITION       = 0x16
-		self.HX_CURRENT_SPEED          = 0x17
-		self.HX_CURRENT_TORQUE         = 0x18
-		self.HX_CURRENT_VOLTAGE        = 0x19
-		self.HX_CURRENT_TEMPERATURE    = 0x1a
-		self.HX_ALL_READONLY           = 0x1b
-		self.HX_FIRMWARE_VERSION       = 0x1c
-		self.HX_MODEL_CODE             = 0x1d
-		self.HX_WRITE_FLASH            = 0x1e
-		#setting status
-		self.SETTING_OK                = 0x01
-		self.SETTING_FAIL              = 0x02
-		#control bytes
-		self.READ_REG                  = 0x01
-		self.WRITE_REG                 = 0x02
-		self.ANSWER                    = 0x03
-		self.MASTER_BUSADDR            = 0x0001
-		self.BROADCAST_BUSADDR         = 1000
+	#register addresses
+	POSITION_REGADDR               	= 0x01
+	SPEED_REGADDR           	= 0x02
+	ADDR_REGADDR                	= 0x03
+	BAUDRATE_REGADDR       		= 0x04
+	COMMUNICATION_MODE_REGADDR 	= 0X21
+	P_GAIN_REGADDR                	= 0x05
+	D_GAIN_REGADDR                	= 0x06
+	I_GAIN_REGADDR                	= 0x07
+	PDI_GAIN_REGADDR              	= 0x08
+	PDI_DEADBAND_REGADDR          	= 0x1f
+	ACCELERATION_REGADDR          	= 0x20
+	CW_FLEXIBLE_MARGIN_REGADDR    	= 0x09
+	CCW_FLEXIBLE_MARGIN_REGADDR   	= 0x0a
+	CW_FLEXIBLE_SLOPE_REGADDR     	= 0x0b
+	CCW_FLEXIBLE_SLOPE_REGADDR    	= 0x0c
+	WORKING_MODE_REGADDR          	= 0x0d
+	SERVO_STATE_REGADDR           	= 0x0e
+	MAX_POSITION_REGADDR          	= 0x0f
+	MIN_POSITION_REGADDR          	= 0x10
+	MAX_TEMPERATURE_REGADDR       	= 0x11
+	MAX_VOLTAGE_REGADDR           	= 0x12
+	MIN_VOLTAGE_REGADDR           	= 0x13
+	MAX_TORQUE_REGADDR            	= 0x14
+	ALL_WRITEREAD_REGADDR         	= 0x15
+	CURRENT_POSITION_REGADDR      	= 0x16
+	CURRENT_SPEED_REGADDR         	= 0x17
+	CURRENT_TORQUE_REGADDR        	= 0x18
+	CURRENT_VOLTAGE_REGADDR       	= 0x19
+	CURRENT_TEMPERATURE_REGADDR   	= 0x1a
+	ALL_READONLY_REGADDR          	= 0x1b
+	FIRMWARE_VERSION_REGADDR      	= 0x1c
+	MODEL_CODE_REGADDR            	= 0x1d
+	WRITE_FLASH_REGADDR           	= 0x1e
+	#setting status
+	SETTING_OK       		= 0x01
+	SETTING_FAIL     		= 0x02
+	#cont				
+	READ_REG         		= 0x01
+	WRITE_REG       		= 0x02
+	ANSWER           		= 0x03
+	MASTER_BUSADDR   		= 0x0001
+	BROADCAST_BUSADDR		= 1000
+	def __init__(self, serialPort):
+		self.serialPort = serialPort
+
 	def write(self, devAddr, regAddr, data):
 		'''write data to servo device'''
 		checkSum = 0
-		index = 0
 		ret = 0
 		if ((devAddr > self.BROADCAST_BUSADDR) or devAddr <= self.MASTER_BUSADDR):
 			return ret
-		buff = [0xaa, 0x55]	#hea
-		#master bus address
+		buff = [0xaa, 0x55]	#frame header
+		#master bus address, 2 bytes
 		buff.append((self.MASTER_BUSADDR >> 8) & 0xff)
 		buff.append(self.MASTER_BUSADDR & 0xff)
-		#device address
+		
+		#device address, 2 bytes
 		buff.append((devAddr >> 8) & 0xff)
 		buff.append(devAddr & 0xff)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
-		#length
+
+		#frame length, 1byte
 		buff.append(10)
 		
-		#type
+		#frame type: write_reg, 1 byte
 		buff.append(self.WRITE_REG &0xff)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
-		#register address
+
+		#register address, 1byte
 		buff.append(regAddr & 0xff)
-		if (buff[len(buff) - 1] == 0xaa):
+		if (buff[-1] == 0xaa):
 			buff.append(0)
-		#data
+
+		#data, 2 bytes
 		buff.append((data>>8) & 0xff)
-		if buff[len(buff)-1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
 		buff.append(data & 0xff)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
-		#checksum
+
+		#checksum, 1 byte
 		checksum = self.checkSumCal(buff, 2, len(buff))
 		print hex(checksum)
 		buff.append(checksum)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
+
 		#tail
 		buff.append(0xaa)
 		buff.append(0x81)
 			
+		#send data by serial port
 		print buff
-		strBuff = ''
+		sendData = ''
 		for i in range(0, len(buff)):
-			strBuff += chr(buff[i])
-		self.ser.write(strBuff)
-		print "strBuff:", strBuff
-		print "length of strBuff:", len(strBuff)
+			sendData += chr(buff[i])
+		self.serialPort.write(sendData)
+		print "sendData:", sendData
+		print "length of sendData:", len(sendData)
 		
 		#receive data
-		reBuff = []
 		sleep(1)
-		data = self.ser.readline()
-		print 1, data		
-		self.ser.flushInput()
+		receivedData = self.serialPort.readline()
+		print "receivedData:", receivedData		
+		print "length of receivedData:", len(receivedData)
+		self.serialPort.flushInput()
+		if len(receivedData) == 0:
+			return 0
+		receivedBuff = []
+		for x in xrange(0, len(receivedData)):
+			receivedBuff.append(ord(receivedData[x]))	#transfer chr to a number
+		index = len(receivedData)
+		print "receivedBuff:", receivedBuff
 		
-		buffData = np.zeros(24)
-		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
-			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
+		if ((index >= 13) and (receivedBuff[0] == 0xaa) and (receivedBuff[1] == 0x55) 
+			and (receivedBuff[index - 1] == 0x81) and (receivedBuff[index - 2] == 0xaa)):
+			#delete frame header and tail
+			buffData = []
 			for i in xrange(2, index - 2):
-				buffData[i - 2] = buff[i]
-				if buff[i] == 0xaa:
+				buffData.append(receivedBuff[i])
+				if receivedBuff[i] == 0xaa:
 					continue
 
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))== self.MASTER_BUSADDR)):
@@ -129,73 +140,73 @@ class HXServo :
 	def read(self, devAddr, regAddr):
 		'''read data from servo device'''
 		checkSum = 0
-		index = 0
 		ret = 0
-		if ((devAddr >= self.BROADCAST_BUSADDR) or devAddr <= self.MASTER_BUSADDR):
+		if ((devAddr > self.BROADCAST_BUSADDR) or devAddr <= self.MASTER_BUSADDR):
 			return ret
-		buff = [0xaa, 0x55]	#hea
-		#master bus address
+		buff = [0xaa, 0x55]	#frame header
+		#master bus address, 2 bytes
 		buff.append((self.MASTER_BUSADDR >> 8) & 0xff)
 		buff.append(self.MASTER_BUSADDR & 0xff)
-		#device address
+		
+		#device address, 2 bytes
 		buff.append((devAddr >> 8) & 0xff)
 		buff.append(devAddr & 0xff)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
-		#length
+
+		#frame length, 1byte
 		buff.append(8)
 		
-		#type
+		#frame type: write_reg, 1 byte
 		buff.append(self.READ_REG &0xff)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
-		#register address
+
+		#register address, 1byte
 		buff.append(regAddr & 0xff)
-		if (buff[len(buff) - 1] == 0xaa):
+		if (buff[-1] == 0xaa):
 			buff.append(0)
-		#checksum
+
+		#checksum, 1 byte
 		checksum = self.checkSumCal(buff, 2, len(buff))
 		print hex(checksum)
 		buff.append(checksum)
-		if buff[len(buff) - 1] == 0xaa:
+		if buff[-1] == 0xaa:
 			buff.append(0)
+
 		#tail
 		buff.append(0xaa)
 		buff.append(0x81)
 		
-		
+		#send data by serial port
 		print buff
-		strBuff = ''
+		sendData = ''
 		for i in range(0, len(buff)):
-			strBuff += chr(buff[i])
-		self.ser.write(strBuff)
-		print "strBuff:", strBuff
-		print "length of strBuff:", len(strBuff)
-		#receive data
-		reBuff = []
-		sleep(1)
-		data = self.ser.readline()
-		print 1, data		
-		self.ser.flushInput()
+			sendData += chr(buff[i])
+		self.serialPort.write(sendData)
+		print "sendData:", sendData
+		print "length of sendData:", len(sendData)
 
-		#rceive nothing?
-		print "received data: ", data, len(data)
-		while True:
-			index = self.ser.inWaiting()
-			print 'index:', index
-			if index != 0:
-				reBuff = self.ser.read(64)
-				self.ser.flushInput()
-				break
-			sleep(0.1)
-		buffData = np.zeros(24)
-		print 'received buff:', reBuff
-		print 'length of buff', len(reBuff)
-		if ((index >= 13) and (buff[0] == 0xaa) and (buff[1] == 0x55) 
-			and (buff[index - 1] == 0x81) and (buff[index - 2] == 0xaa)):
+		#receive data
+		sleep(1)
+		receivedData = self.serialPort.readline()
+		print "receivedData:", receivedData		
+		print "length of receivedData:", len(receivedData)
+		self.serialPort.flushInput()
+		if len(receivedData) == 0:
+			return 0
+		receivedBuff = []
+		for x in xrange(0, len(receivedData)):
+			receivedBuff.append(ord(receivedData[x]))	#transfer chr to a number
+		index = len(receivedData)
+		print receivedBuff
+
+		buffData = []
+		if ((index >= 13) and (receivedBuff[0] == 0xaa) and (receivedBuff[1] == 0x55) 
+			and (receivedBuff[index - 1] == 0x81) and (receivedBuff[index - 2] == 0xaa)):
 			for i in xrange(2, index - 2):
-				buffData[i - 2] = buff[i]
-				if buff[i] == 0xaa:
+				buffData.append(receivedBuff[i])
+				if receivedBuff[i] == 0xaa:
 					continue
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))==self.MASTER_BUSADDR)):
 				if((buffData[4]==9) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
@@ -211,8 +222,8 @@ class HXServo :
 			check = int(check) ^ int(data[x])
 		return check
 
-
-servo = HXServo()
-#ans = servo.read(0x07, servo.HX_P_GAIN)
-servo.write(1000, servo.HX_BAUDRATE, 5)
-servo.write(1000, 0x1d, 1)
+ser = serial.Serial('/dev/ttyUSB0', 921600, timeout = 0.5)
+servo = HXServo(ser)
+ans = servo.read(0x07, servo.P_GAIN_REGADDR)
+servo.write(7, servo.POSITION_REGADDR, 1000)
+#servo.write(1000, 0x1d, 1)
