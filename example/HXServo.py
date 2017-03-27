@@ -179,7 +179,7 @@ class HXServo :
 		buff.append(0x81)
 		
 		#send data by serial port
-		print buff
+		print 'buff:', buff
 		sendData = ''
 		for i in range(0, len(buff)):
 			sendData += chr(buff[i])
@@ -188,7 +188,7 @@ class HXServo :
 		print "length of sendData:", len(sendData)
 
 		#receive data
-		sleep(1)
+#		sleep(0.2)
 		receivedData = self.serialPort.readline()
 		print "receivedData:", receivedData		
 		print "length of receivedData:", len(receivedData)
@@ -222,8 +222,15 @@ class HXServo :
 			check = int(check) ^ int(data[x])
 		return check
 
-ser = serial.Serial('/dev/ttyUSB0', 921600, timeout = 0.5)
+ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
 servo = HXServo(ser)
-ans = servo.read(0x07, servo.P_GAIN_REGADDR)
-servo.write(7, servo.POSITION_REGADDR, 1000)
+ans = servo.read(0x09, servo.ADDR_REGADDR)
+print "ans: ", ans
+sleep(0.1)
+write_ans = servo.write(0x09, servo.POSITION_REGADDR, 1000)
+print "write_ans: ", write_ans
+
+#write_ans = servo.write(0x09, servo.SPEED_REGADDR, 100)
+#print "write_ans: ", write_ans
+#servo.write(1000, servo.BAUDRATE_REGADDR, 5)
 #servo.write(1000, 0x1d, 1)
