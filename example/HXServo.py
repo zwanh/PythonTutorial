@@ -213,83 +213,71 @@ class HXServo :
 		for x in xrange(start, end):
 			check = int(check) ^ int(data[x])
 		return check
-
 	#get register value
 	def getBaudRate(self, id):
 		return self.read(id, self.BAUDRATE_REGADDR)
-
 	def getWorkingMode(self, id):
 		return self.read(id, self.WORKING_MODE_REGADDR)
-
 	def getPosition(self, id):
 		return self.read(id, self.POSITION_REGADDR)
-
+	def getSpeed(self, id):
+		return self.read(id, self.SPEED_REGADDR)
 	def getCurrentPosition(self, id):
 		return self.read(id, self.CURRENT_POSITION_REGADDR)
-
 	def getCurrentTemperature(self, id):
 		return self.read(id, self.CURRENT_TEMPERATURE_REGADDR)
-
 	def getCurrentVoltage(self, id):
 		return self.read(id, self.CURRENT_VOLTAGE_REGADDR)
-
 	def getMinPosition(self, id):
 		return self.read(id, self.MIN_POSITION_REGADDR)
-
 	def getMaxPosition(self, id):
 		return self.read(id, self.MAX_POSITION_REGADDR)
-
 	def getMaxTorque(self, id):
 		return self.read(id, self.MAX_TORQUE_REGADDR)
-
 	def getMinVoltage(self, id):
 		return self.read(id, self.MIN_VOLTAGE_REGADDR)
-
 	def getMaxVoltage(self, id):
 		return self.read(id, self.MAX_VOLTAGE_REGADDR)
+	def getMaxTemperature(self, id):
+		return self.read(id, self.MAX_TEMPERATURE_REGADDR)
 
 	#setting functions
 	def writeFlash(self, id):
 		return self.write(id, self.WRITE_FLASH_REGADDR, 1)
-
 	def setBaudRate(self, id, value):
 		self.write(id, self.BAUDRATE_REGADDR, value)
-		self.writeFlash()
-
+		self.writeFlash(id)
 	def setWorkingMode(self, id, value):
 		self.write(id, self.WORKING_MODE_REGADDR, value)
-
 	def setPosition(self, id, value):
-		return self.write(id, self.POSITION_REGADDR, value)
-
-	def setCurrentPoistion(self, id, value):
-		return self.write(id, self.CURRENT_POSITION_REGADDR, value)
-
-	def setCurrentTemperature(self, id, value):
-		return self.write(id, self.CURRENT_TEMPERATURE_REGADDR, value)
-
-	def setCurrentVoltage(self, id, value):
-		return self.write(id, self.CURRENT_VOLTAGE_REGADDR, value)
-
-	def setMinPostion(self, id, value):
-		return self.write(id, self.MIN_POSITION_REGADDR, value)
-
-	def setMaxPostion(self, id, value):
-		return self.write(id, self.MAX_POSITION_REGADDR, value)
-
+		self.write(id, self.POSITION_REGADDR, value)
+	def setSpeed(self, id, value):
+		self.write(id, self.SPEED_REGADDR, value)
+		self.writeFlash(id)
+	def setMinPosition(self, id, value):
+		self.write(id, self.MIN_POSITION_REGADDR, value)
+		self.writeFlash(id)
+	def setMaxPosition(self, id, value):
+		self.write(id, self.MAX_POSITION_REGADDR, value)
+		self.writeFlash(id)
 	def setMinTorque(self, id, value):
-		return self.write(id, self.MIN_TORQUE_REGADDR, value)
-
+		self.write(id, self.MIN_TORQUE_REGADDR, value)
+		self.writeFlash(id)
 	def setMaxTorque(self, id, value):
-		return self.write(id, self.MAX_TORQUE_REGADDR, value)
-
+		self.write(id, self.MAX_TORQUE_REGADDR, value)
+		self.writeFlash(id)
 	def setMinVoltage(self, id, value):
-		return self.write(id, self.MIN_VOLTAGE_REGADDR, value)
-
+		self.write(id, self.MIN_VOLTAGE_REGADDR, value)
+		self.writeFlash(id)
 	def setMaxVoltage(self, id, value):
-		return self.write(id, self.MAX_VOLTAGE_REGADDR, value)
-
-
+		self.write(id, self.MAX_VOLTAGE_REGADDR, value)
+		self.writeFlash(id)
+	def setMaxTemperature(self, id, value):
+		self.write(id, self.MAX_TEMPERATURE_REGADDR, value)
+		self.writeFlash(id)
+	def setAddr(self, id, value):
+		self.write(id, self.ADDR_REGADDR, value)
+		self.writeFlash(id)
 #test code
 if __name__ == '__main__':
 	ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
@@ -298,6 +286,7 @@ if __name__ == '__main__':
 	print "Read testing..."
 	print "BaudRate:", servo.getBaudRate(id)
 	print "Position:", servo.getPosition(id)
+	print "Speed:", servo.getSpeed(id)
 	print "CurrentPostion:", servo.getCurrentPosition(id)
 	print "CurrentTemperature:", servo.getCurrentTemperature(id)
 	print "CurrentVoltage:", servo.getCurrentVoltage(id)
@@ -306,6 +295,7 @@ if __name__ == '__main__':
 	print "MaxTorque:", servo.getMaxTorque(id)
 	print "MinVoltage:", servo.getMinVoltage(id)
 	print "MaxVoltage:", servo.getMaxVoltage(id)
+	print "MaxTemperature:", servo.getMaxTemperature(id)
 	servo.setWorkingMode(id, 4)
 	sleep(1)
 	servo.setWorkingMode(id, 5)
@@ -315,3 +305,11 @@ if __name__ == '__main__':
 	servo.setPosition(id, 200)
 	sleep(1)
 	servo.setPosition(id, 3800)
+	 	
+#	servo.setMaxTemperature(id, servo.getMaxTemperature(id) + 10)
+#	servo.setSpeed(id, servo.getSpeed(id) + 10)
+#	servo.setMinPosition(id, servo.getMinPosition(id) - 20)
+#	servo.setMaxPosition(id, servo.getMaxPosition(id) - 20)
+#	servo.setMinVoltage(id, servo.getMinVoltage(id) + 10)
+#	servo.setMaxVoltage(id, servo.getMaxVoltage(id) + 10)
+#	servo.setMaxTorque(id, servo.getMaxTorque(id) + 10)
