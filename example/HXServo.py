@@ -89,7 +89,6 @@ class HXServo :
 
 		#checksum, 1 byte
 		checksum = self.checkSumCal(buff, 2, len(buff))
-		print hex(checksum)
 		buff.append(checksum)
 		if buff[-1] == 0xaa:
 			buff.append(0)
@@ -99,20 +98,28 @@ class HXServo :
 		buff.append(0x81)
 			
 		#send data by serial port
-		print buff
+		print "sendData", buff
 		sendData = ''
 		for i in range(0, len(buff)):
 			sendData += chr(buff[i])
 		self.serialPort.write(sendData)
-		print "sendData:", sendData
-		print "length of sendData:", len(sendData)
 		
 		#receive data
-		sleep(1)
-		receivedData = self.serialPort.readline()
-		print "receivedData:", receivedData		
-		print "length of receivedData:", len(receivedData)
-		self.serialPort.flushInput()
+		receivedData = []
+		tailReceived = False
+		headerReceived = False
+		while not(tailReceived and headerReceived):
+			temp = self.serialPort.read(100)	#read a long enough data stream
+			self.serialPort.flushInput()
+			for i in range(0, len(temp)-1):
+				if headerReceived:
+					receivedData.append(temp[i])
+				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x81:	#tail
+					tailReceived = True
+					receivedData.append(temp[i+1])
+				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x55:	#header
+					headerReceived = True
+					receivedData.append(temp[i])
 		if len(receivedData) == 0:
 			return 0
 		receivedBuff = []
@@ -169,7 +176,6 @@ class HXServo :
 
 		#checksum, 1 byte
 		checksum = self.checkSumCal(buff, 2, len(buff))
-		print hex(checksum)
 		buff.append(checksum)
 		if buff[-1] == 0xaa:
 			buff.append(0)
@@ -179,31 +185,41 @@ class HXServo :
 		buff.append(0x81)
 		
 		#send data by serial port
-		print 'buff:', buff
+		print 'sendData:', buff
 		sendData = ''
 		for i in range(0, len(buff)):
 			sendData += chr(buff[i])
 		self.serialPort.write(sendData)
-		print "sendData:", sendData
-		print "length of sendData:", len(sendData)
 
 		#receive data
-#		sleep(0.2)
-		receivedData = self.serialPort.readline()
-		print "receivedData:", receivedData		
-		print "length of receivedData:", len(receivedData)
-		self.serialPort.flushInput()
+		receivedData = []
+		tailReceived = False
+		headerReceived = False
+		while not(tailReceived and headerReceived):
+			temp = self.serialPort.read(100)	#read a long enough data stream
+			self.serialPort.flushInput()
+			for i in range(0, len(temp)-1):
+				if headerReceived:
+					receivedData.append(temp[i])
+				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x81:	#tail
+					tailReceived = True
+					receivedData.append(temp[i+1])
+				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x55:	#header
+					headerReceived = True
+					receivedData.append(temp[i])
+
 		if len(receivedData) == 0:
 			return 0
 		receivedBuff = []
 		for x in xrange(0, len(receivedData)):
 			receivedBuff.append(ord(receivedData[x]))	#transfer chr to a number
 		index = len(receivedData)
-		print receivedBuff
+		print "receivedBuff:", receivedBuff
 
-		buffData = []
 		if ((index >= 13) and (receivedBuff[0] == 0xaa) and (receivedBuff[1] == 0x55) 
 			and (receivedBuff[index - 1] == 0x81) and (receivedBuff[index - 2] == 0xaa)):
+			#delte frame header and tail
+			buffData = []
 			for i in xrange(2, index - 2):
 				buffData.append(receivedBuff[i])
 				if receivedBuff[i] == 0xaa:
@@ -218,14 +234,16 @@ class HXServo :
 	def checkSumCal(self, data, start, end):
 		check = 0x00 
 		for x in xrange(start, end):
-			print hex(data[x])
 			check = int(check) ^ int(data[x])
 		return check
 
 ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
 servo = HXServo(ser)
-ans = servo.read(0x09, servo.ADDR_REGADDR)
+
+print "Read testing..."
+ans = servo.read(0x09, servo.POSITION_REGADDR)
 print "ans: ", ans
+print '\nWrite testing...'
 sleep(0.1)
 write_ans = servo.write(0x09, servo.POSITION_REGADDR, 1000)
 print "write_ans: ", write_ans
