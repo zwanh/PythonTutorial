@@ -59,26 +59,21 @@ class HXServo :
 		#master bus address, 2 bytes
 		buff.append((self.MASTER_BUSADDR >> 8) & 0xff)
 		buff.append(self.MASTER_BUSADDR & 0xff)
-		
 		#device address, 2 bytes
 		buff.append((devAddr >> 8) & 0xff)
 		buff.append(devAddr & 0xff)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#frame length, 1byte
 		buff.append(10)
-		
 		#frame type: write_reg, 1 byte
 		buff.append(self.WRITE_REG &0xff)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#register address, 1byte
 		buff.append(regAddr & 0xff)
 		if (buff[-1] == 0xaa):
 			buff.append(0)
-
 		#data, 2 bytes
 		buff.append((data>>8) & 0xff)
 		if buff[-1] == 0xaa:
@@ -86,19 +81,16 @@ class HXServo :
 		buff.append(data & 0xff)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#checksum, 1 byte
 		checksum = self.checkSumCal(buff, 2, len(buff))
 		buff.append(checksum)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#tail
 		buff.append(0xaa)
 		buff.append(0x81)
 			
 		#send data by serial port
-		print "sendData", buff
 		sendData = ''
 		for i in range(0, len(buff)):
 			sendData += chr(buff[i])
@@ -113,28 +105,24 @@ class HXServo :
 			self.serialPort.flushInput()
 			for i in range(0, len(temp)-1):
 				if headerReceived:
-					receivedData.append(temp[i])
+					receivedData.append(ord(temp[i]))
 				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x81:	#tail
 					tailReceived = True
-					receivedData.append(temp[i+1])
+					receivedData.append(ord(temp[i+1]))
 				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x55:	#header
 					headerReceived = True
-					receivedData.append(temp[i])
+					receivedData.append(ord(temp[i]))
 		if len(receivedData) == 0:
 			return 0
-		receivedBuff = []
-		for x in xrange(0, len(receivedData)):
-			receivedBuff.append(ord(receivedData[x]))	#transfer chr to a number
 		index = len(receivedData)
-		print "receivedBuff:", receivedBuff
 		
-		if ((index >= 13) and (receivedBuff[0] == 0xaa) and (receivedBuff[1] == 0x55) 
-			and (receivedBuff[index - 1] == 0x81) and (receivedBuff[index - 2] == 0xaa)):
+		if ((index >= 13) and (receivedData[0] == 0xaa) and (receivedData[1] == 0x55) 
+			and (receivedData[index - 1] == 0x81) and (receivedData[index - 2] == 0xaa)):
 			#delete frame header and tail
 			buffData = []
 			for i in xrange(2, index - 2):
-				buffData.append(receivedBuff[i])
-				if receivedBuff[i] == 0xaa:
+				buffData.append(receivedData[i])
+				if receivedData[i] == 0xaa:
 					continue
 
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))== self.MASTER_BUSADDR)):
@@ -148,49 +136,42 @@ class HXServo :
 		'''read data from servo device'''
 		checkSum = 0
 		ret = 0
+
 		if ((devAddr > self.BROADCAST_BUSADDR) or devAddr <= self.MASTER_BUSADDR):
 			return ret
 		buff = [0xaa, 0x55]	#frame header
 		#master bus address, 2 bytes
 		buff.append((self.MASTER_BUSADDR >> 8) & 0xff)
 		buff.append(self.MASTER_BUSADDR & 0xff)
-		
 		#device address, 2 bytes
 		buff.append((devAddr >> 8) & 0xff)
 		buff.append(devAddr & 0xff)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#frame length, 1byte
 		buff.append(8)
-		
 		#frame type: write_reg, 1 byte
 		buff.append(self.READ_REG &0xff)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#register address, 1byte
 		buff.append(regAddr & 0xff)
 		if (buff[-1] == 0xaa):
 			buff.append(0)
-
 		#checksum, 1 byte
 		checksum = self.checkSumCal(buff, 2, len(buff))
 		buff.append(checksum)
 		if buff[-1] == 0xaa:
 			buff.append(0)
-
 		#tail
 		buff.append(0xaa)
 		buff.append(0x81)
 		
 		#send data by serial port
-		print 'sendData:', buff
 		sendData = ''
 		for i in range(0, len(buff)):
 			sendData += chr(buff[i])
 		self.serialPort.write(sendData)
-
 		#receive data
 		receivedData = []
 		tailReceived = False
@@ -200,31 +181,25 @@ class HXServo :
 			self.serialPort.flushInput()
 			for i in range(0, len(temp)-1):
 				if headerReceived:
-					receivedData.append(temp[i])
+					receivedData.append(ord(temp[i]))
 				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x81:	#tail
 					tailReceived = True
-					receivedData.append(temp[i+1])
+					receivedData.append(ord(temp[i+1]))
 				if ord(temp[i]) == 0xAA and ord(temp[i+1]) == 0x55:	#header
 					headerReceived = True
-					receivedData.append(temp[i])
+					receivedData.append(ord(temp[i]))
 
 		if len(receivedData) == 0:
 			return 0
-		receivedBuff = []
-		for x in xrange(0, len(receivedData)):
-			receivedBuff.append(ord(receivedData[x]))	#transfer chr to a number
 		index = len(receivedData)
-		print "receivedBuff:", receivedBuff
-
-		if ((index >= 13) and (receivedBuff[0] == 0xaa) and (receivedBuff[1] == 0x55) 
-			and (receivedBuff[index - 1] == 0x81) and (receivedBuff[index - 2] == 0xaa)):
+		if ((index >= 13) and (receivedData[0] == 0xaa) and (receivedData[1] == 0x55) 
+			and (receivedData[index - 1] == 0x81) and (receivedData[index - 2] == 0xaa)):
 			#delte frame header and tail
 			buffData = []
 			for i in xrange(2, index - 2):
-				buffData.append(receivedBuff[i])
-				if receivedBuff[i] == 0xaa:
+				buffData.append(receivedData[i])
+				if receivedData[i] == 0xaa:
 					continue
-			print buffData
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))==self.MASTER_BUSADDR)):
 				
 				if((buffData[4]==10) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
@@ -238,20 +213,105 @@ class HXServo :
 		for x in xrange(start, end):
 			check = int(check) ^ int(data[x])
 		return check
+
+	#get register value
+	def getBaudRate(self, id):
+		return self.read(id, self.BAUDRATE_REGADDR)
+
+	def getWorkingMode(self, id):
+		return self.read(id, self.WORKING_MODE_REGADDR)
+
+	def getPosition(self, id):
+		return self.read(id, self.POSITION_REGADDR)
+
+	def getCurrentPosition(self, id):
+		return self.read(id, self.CURRENT_POSITION_REGADDR)
+
+	def getCurrentTemperature(self, id):
+		return self.read(id, self.CURRENT_TEMPERATURE_REGADDR)
+
+	def getCurrentVoltage(self, id):
+		return self.read(id, self.CURRENT_VOLTAGE_REGADDR)
+
+	def getMinPosition(self, id):
+		return self.read(id, self.MIN_POSITION_REGADDR)
+
+	def getMaxPosition(self, id):
+		return self.read(id, self.MAX_POSITION_REGADDR)
+
+	def getMaxTorque(self, id):
+		return self.read(id, self.MAX_TORQUE_REGADDR)
+
+	def getMinVoltage(self, id):
+		return self.read(id, self.MIN_VOLTAGE_REGADDR)
+
+	def getMaxVoltage(self, id):
+		return self.read(id, self.MAX_VOLTAGE_REGADDR)
+
+	#setting functions
+	def writeFlash(self, id):
+		return self.write(id, self.WRITE_FLASH_REGADDR, 1)
+
+	def setBaudRate(self, id, value):
+		self.write(id, self.BAUDRATE_REGADDR, value)
+		self.writeFlash()
+
+	def setWorkingMode(self, id, value):
+		self.write(id, self.WORKING_MODE_REGADDR, value)
+
+	def setPosition(self, id, value):
+		return self.write(id, self.POSITION_REGADDR, value)
+
+	def setCurrentPoistion(self, id, value):
+		return self.write(id, self.CURRENT_POSITION_REGADDR, value)
+
+	def setCurrentTemperature(self, id, value):
+		return self.write(id, self.CURRENT_TEMPERATURE_REGADDR, value)
+
+	def setCurrentVoltage(self, id, value):
+		return self.write(id, self.CURRENT_VOLTAGE_REGADDR, value)
+
+	def setMinPostion(self, id, value):
+		return self.write(id, self.MIN_POSITION_REGADDR, value)
+
+	def setMaxPostion(self, id, value):
+		return self.write(id, self.MAX_POSITION_REGADDR, value)
+
+	def setMinTorque(self, id, value):
+		return self.write(id, self.MIN_TORQUE_REGADDR, value)
+
+	def setMaxTorque(self, id, value):
+		return self.write(id, self.MAX_TORQUE_REGADDR, value)
+
+	def setMinVoltage(self, id, value):
+		return self.write(id, self.MIN_VOLTAGE_REGADDR, value)
+
+	def setMaxVoltage(self, id, value):
+		return self.write(id, self.MAX_VOLTAGE_REGADDR, value)
+
+
 #test code
 if __name__ == '__main__':
 	ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
 	servo = HXServo(ser)
-	
+	id = 9
 	print "Read testing..."
-	ans = servo.read(0x09, servo.POSITION_REGADDR)
-	print "ans: ", ans
-	print '\nWrite testing...'
-	sleep(0.1)
-	write_ans = servo.write(0x09, servo.POSITION_REGADDR, 1000)
-	print "write_ans: ", write_ans
+	print "BaudRate:", servo.getBaudRate(id)
+	print "Position:", servo.getPosition(id)
+	print "CurrentPostion:", servo.getCurrentPosition(id)
+	print "CurrentTemperature:", servo.getCurrentTemperature(id)
+	print "CurrentVoltage:", servo.getCurrentVoltage(id)
+	print "MinPosition:", servo.getMinPosition(id)
+	print "MaxPosition:", servo.getMaxPosition(id)
+	print "MaxTorque:", servo.getMaxTorque(id)
+	print "MinVoltage:", servo.getMinVoltage(id)
+	print "MaxVoltage:", servo.getMaxVoltage(id)
+	servo.setWorkingMode(id, 4)
+	sleep(1)
+	servo.setWorkingMode(id, 5)
+	sleep(1)
+	servo.setWorkingMode(id, 2)
 
-	#write_ans = servo.write(0x09, servo.SPEED_REGADDR, 100)
-	#print "write_ans: ", write_ans
-	#servo.write(1000, servo.BAUDRATE_REGADDR, 5)
-	#servo.write(1000, 0x1d, 1)
+	servo.setPosition(id, 200)
+	sleep(1)
+	servo.setPosition(id, 3800)
