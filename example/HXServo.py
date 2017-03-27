@@ -224,8 +224,10 @@ class HXServo :
 				buffData.append(receivedBuff[i])
 				if receivedBuff[i] == 0xaa:
 					continue
+			print buffData
 			if((((buffData[0]<<8)|(buffData[1]))==devAddr) and (((buffData[2]<<8)|(buffData[3]))==self.MASTER_BUSADDR)):
-				if((buffData[4]==9) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
+				
+				if((buffData[4]==10) and (buffData[5]==self.ANSWER) and (buffData[6]==regAddr)):
 					checksum = self.checkSumCal (buffData, 0, 9);
 				if(checksum==buffData[9]):
 					ret = (buffData[7] << 8) | buffData[8];
@@ -236,19 +238,20 @@ class HXServo :
 		for x in xrange(start, end):
 			check = int(check) ^ int(data[x])
 		return check
+#test code
+if __name__ == '__main__':
+	ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
+	servo = HXServo(ser)
+	
+	print "Read testing..."
+	ans = servo.read(0x09, servo.POSITION_REGADDR)
+	print "ans: ", ans
+	print '\nWrite testing...'
+	sleep(0.1)
+	write_ans = servo.write(0x09, servo.POSITION_REGADDR, 1000)
+	print "write_ans: ", write_ans
 
-ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
-servo = HXServo(ser)
-
-print "Read testing..."
-ans = servo.read(0x09, servo.POSITION_REGADDR)
-print "ans: ", ans
-print '\nWrite testing...'
-sleep(0.1)
-write_ans = servo.write(0x09, servo.POSITION_REGADDR, 1000)
-print "write_ans: ", write_ans
-
-#write_ans = servo.write(0x09, servo.SPEED_REGADDR, 100)
-#print "write_ans: ", write_ans
-#servo.write(1000, servo.BAUDRATE_REGADDR, 5)
-#servo.write(1000, 0x1d, 1)
+	#write_ans = servo.write(0x09, servo.SPEED_REGADDR, 100)
+	#print "write_ans: ", write_ans
+	#servo.write(1000, servo.BAUDRATE_REGADDR, 5)
+	#servo.write(1000, 0x1d, 1)
