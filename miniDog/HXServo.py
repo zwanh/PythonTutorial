@@ -101,7 +101,7 @@ class HXServo :
 		tailReceived = False
 		headerReceived = False
 		while not(tailReceived and headerReceived):
-			temp = self.serialPort.read(100)	#read a long enough data stream
+			temp = self.serialPort.read(20)	#read a long enough data stream
 			self.serialPort.flushInput()
 			for i in range(0, len(temp)-1):
 				if headerReceived:
@@ -177,7 +177,7 @@ class HXServo :
 		tailReceived = False
 		headerReceived = False
 		while not(tailReceived and headerReceived):
-			temp = self.serialPort.read(100)	#read a long enough data stream
+			temp = self.serialPort.read(20)	#read a long enough data stream
 			self.serialPort.flushInput()
 			for i in range(0, len(temp)-1):
 				if headerReceived:
@@ -282,30 +282,33 @@ class HXServo :
 if __name__ == '__main__':
 	ser = serial.Serial('/dev/ttyAMA0', 115200, timeout = 0.5)
 	servo = HXServo(ser)
-	id = 9
-	print "Read testing..."
-	print "BaudRate:", servo.getBaudRate(id)
-	print "Position:", servo.getPosition(id)
-	print "Speed:", servo.getSpeed(id)
-	print "CurrentPostion:", servo.getCurrentPosition(id)
-	print "CurrentTemperature:", servo.getCurrentTemperature(id)
-	print "CurrentVoltage:", servo.getCurrentVoltage(id)
-	print "MinPosition:", servo.getMinPosition(id)
-	print "MaxPosition:", servo.getMaxPosition(id)
-	print "MaxTorque:", servo.getMaxTorque(id)
-	print "MinVoltage:", servo.getMinVoltage(id)
-	print "MaxVoltage:", servo.getMaxVoltage(id)
-	print "MaxTemperature:", servo.getMaxTemperature(id)
-	servo.setWorkingMode(id, 4)
-	sleep(1)
-	servo.setWorkingMode(id, 5)
-	sleep(1)
-	servo.setWorkingMode(id, 2)
-
-	servo.setPosition(id, 200)
-	sleep(1)
-	servo.setPosition(id, 3800)
+#	id = 6
+#	print "Read testing..."
+#	servo.setWorkingMode(id, 1)
+#	print "BaudRate:", servo.getBaudRate(id)
+#	print "Position:", servo.getPosition(id)
+#	print "Speed:", servo.getSpeed(id)
+#	print "CurrentPostion:", servo.getCurrentPosition(id)
+#	print "CurrentTemperature:", servo.getCurrentTemperature(id)
+#	print "CurrentVoltage:", servo.getCurrentVoltage(id)
+#	print "MinPosition:", servo.getMinPosition(id)
+#	print "MaxPosition:", servo.getMaxPosition(id)
+#	print "MaxTorque:", servo.getMaxTorque(id)
+#	print "MinVoltage:", servo.getMinVoltage(id)
+#	print "MaxVoltage:", servo.getMaxVoltage(id)
+#	print "MaxTemperature:", servo.getMaxTemperature(id)
+#	servo.setWorkingMode(id, 4)
+#	sleep(1)
+#	servo.setWorkingMode(id, 5)
+#	sleep(1)
+#	servo.setWorkingMode(id, 1)
+	for i in range(2, 10):
+		servo.setWorkingMode(i,2)
+		servo.setPosition(i, 2000)
+		sleep(0.5)
+		print "Position:", servo.getPosition(id)
 	 	
+#	servo.setAddr(id, 9)
 #	servo.setMaxTemperature(id, servo.getMaxTemperature(id) + 10)
 #	servo.setSpeed(id, servo.getSpeed(id) + 10)
 #	servo.setMinPosition(id, servo.getMinPosition(id) - 20)
